@@ -12,6 +12,7 @@
 
 </head>
 <body>
+  
 
 <!-- HEADER -->
 
@@ -523,5 +524,18 @@ document.getElementById('dataAtual').textContent =
 initCharts();
 recalc();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</div>
+
+<div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+  <button onclick="gerarPDF()"
+    style="background:#00C853;color:white;border:none;padding:15px 20px;border-radius:8px;cursor:pointer;">
+    Baixar Relatório PDF
+  </button>
+</div>
+
+<div id="relatorio">
+</div>
 </body>
 </html>

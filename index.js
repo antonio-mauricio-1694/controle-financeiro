@@ -232,3 +232,77 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
+function calcularTotal(ids) {
+  return ids.reduce((total, id) => {
+    const el = document.getElementById(id);
+    return total + (parseFloat(el?.value) || 0);
+  }, 0);
+}
+
+// ─── GERAR PDF PROFISSIONAL ──────────────────────────────
+function gerarPDF() {
+  const { jsPDF } = window.jspdf;
+
+  const pdf = new jsPDF('p', 'mm', 'a4');
+
+  // 🧠 pega valores do seu sistema
+  const totalEntradas = calcularTotal(ENT_IDS);
+  const totalEssenciais = calcularTotal(ESS_IDS);
+  const totalNaoEssenciais = calcularTotal(NAO_IDS);
+
+  const totalDespesas = totalEssenciais + totalNaoEssenciais;
+  const saldo = totalEntradas - totalDespesas;
+
+  // ─── TÍTULO ────────────────────────────────────────────
+  pdf.setFontSize(16);
+  pdf.text("Relatório Financeiro", 10, 10);
+
+  // ─── RESUMO ────────────────────────────────────────────
+  pdf.setFontSize(12);
+
+  pdf.text("Entradas: R$ " + totalEntradas.toFixed(2), 10, 20);
+  pdf.text("Despesas: R$ " + totalDespesas.toFixed(2), 10, 30);
+  pdf.text("Saldo: R$ " + saldo.toFixed(2), 10, 40);
+
+  // ─── DETALHAMENTO ──────────────────────────────────────
+  let y = 60;
+
+  pdf.text("Entradas:", 10, y);
+  y += 10;
+
+  ENT_IDS.forEach((id, index) => {
+    const valor = document.getElementById(id)?.value || 0;
+    const nome = ENT_DESC[index];
+
+    pdf.text(`${nome}: R$ ${parseFloat(valor).toFixed(2)}`, 10, y);
+    y += 8;
+  });
+
+  y += 5;
+  pdf.text("Despesas Essenciais:", 10, y);
+  y += 10;
+
+  ESS_IDS.forEach((id, index) => {
+    const valor = document.getElementById(id)?.value || 0;
+    const nome = ESS_DESC[index];
+
+    pdf.text(`${nome}: R$ ${parseFloat(valor).toFixed(2)}`, 10, y);
+    y += 8;
+  });
+
+  y += 5;
+  pdf.text("Despesas Não Essenciais:", 10, y);
+  y += 10;
+
+  NAO_IDS.forEach((id, index) => {
+    const valor = document.getElementById(id)?.value || 0;
+    const nome = NAO_DESC[index];
+
+    pdf.text(`${nome}: R$ ${parseFloat(valor).toFixed(2)}`, 10, y);
+    y += 8;
+  });
+
+  // ─── DOWNLOAD ──────────────────────────────────────────
+  pdf.save("relatorio-financeiro.pdf");
+}
