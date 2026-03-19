@@ -195,3 +195,176 @@ body {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 3px; }
+
+/* ───────────────── MOBILE REAL (ATÉ 768px) ───────────────── */
+@media (max-width: 768px) {
+
+  /* layout geral */
+  body {
+    font-size: 14px;
+  }
+
+  .split {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .planilha-side,
+  .dash-side {
+    padding: 14px;
+  }
+
+  /* header */
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .btn-toggle {
+    flex: 1;
+    text-align: center;
+  }
+
+  /* inputs */
+  .input-row {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px;
+  }
+
+  .input-row .desc {
+    white-space: normal;
+    font-size: 0.85rem;
+  }
+
+  .input-row input {
+    width: 100%;
+    font-size: 1rem;
+    padding: 10px;
+  }
+
+  .input-row button {
+    width: 100%;
+    margin-top: 6px;
+    padding: 8px;
+  }
+
+  /* totais */
+  .total-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  /* saldo */
+  .saldo-box .saldo-valor {
+    font-size: 1.6rem;
+  }
+
+  /* reserva */
+  .reserva-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  /* KPIs */
+  .kpi-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .kpi-card {
+    padding: 12px;
+  }
+
+  /* gráficos */
+  .charts-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-card {
+    padding: 12px;
+  }
+
+  canvas {
+    max-height: 250px;
+  }
+}
+
+/* ───────────────── EXTRA PEQUENO (ATÉ 480px) ───────────────── */
+@media (max-width: 480px) {
+
+  .kpi-row {
+    grid-template-columns: 1fr;
+  }
+
+  .header h1 {
+    font-size: 1.2rem;
+  }
+
+  .badge-date {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+  }
+
+  .saldo-box .saldo-valor {
+    font-size: 1.4rem;
+  }
+
+}
+
+.btn-toggle.full {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px;
+  font-size: 0.9rem;
+}
+
+.btn-remove {
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+/* MOBILE FINO */
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .input-row input {
+    width: 100%;
+  }
+
+  .desc {
+    white-space: normal !important;
+  }
+
+  canvas {
+    max-width: 100%;
+  }
+}
+
