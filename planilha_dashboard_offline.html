@@ -4,217 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Planilha + Dashboard Financeiro – Mauricio&Maria</title>
+
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
+<script src="index.js"></script>
+<link rel="stylesheet" href="style.css">
 
-:root {
-  --bg: #0f0c29;
-  --panel: #1a1a2e;
-  --panel2: #16213e;
-  --border: rgba(255,255,255,0.08);
-  --green: #00C853;
-  --orange: #FF6D00;
-  --red: #FF1744;
-  --blue: #00B0FF;
-  --text: #e0e0e0;
-  --muted: #888;
-}
-
-body {
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-  min-height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: var(--text);
-  overflow-x: hidden;
-}
-
-/* ── HEADER ── */
-.header {
-  background: linear-gradient(90deg, #1a1a2e, #16213e, #0f3460);
-  padding: 18px 28px;
-  border-bottom: 3px solid var(--green);
-  display: flex; justify-content: space-between; align-items: center;
-  position: sticky; top: 0; z-index: 100;
-}
-.header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; }
-.header h1 span { color: var(--green); }
-.header-right { display: flex; align-items: center; gap: 12px; }
-.badge-date { background: rgba(0,200,83,.15); border: 1px solid var(--green); color: var(--green); padding: 6px 14px; border-radius: 20px; font-size: .8rem; }
-.btn-toggle {
-  background: rgba(0,176,255,.15); border: 1px solid var(--blue); color: var(--blue);
-  padding: 6px 14px; border-radius: 20px; font-size: .8rem; cursor: pointer;
-  transition: background .2s;
-}
-.btn-toggle:hover { background: rgba(0,176,255,.3); }
-
-/* ── LAYOUT SPLIT ── */
-.split {
-  display: grid;
-  grid-template-columns: 520px 1fr;
-  gap: 0;
-  min-height: calc(100vh - 62px);
-}
-
-/* ── LADO ESQUERDO — PLANILHA ── */
-.planilha-side {
-  background: rgba(16,14,40,0.97);
-  border-right: 2px solid var(--border);
-  overflow-y: auto;
-  padding: 20px;
-  transition: all .3s;
-}
-
-.planilha-side h2 {
-  font-size: 1rem; color: var(--blue); margin-bottom: 16px;
-  padding-bottom: 8px; border-bottom: 2px solid rgba(0,176,255,.3);
-  text-transform: uppercase; letter-spacing: 1px;
-}
-
-.section-label {
-  font-size: .7rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 1.5px; padding: 6px 10px; border-radius: 6px;
-  margin: 14px 0 8px 0; display: inline-block;
-}
-.label-entradas { background: rgba(0,200,83,.15); color: var(--green); }
-.label-ess      { background: rgba(255,109,0,.15); color: var(--orange); }
-.label-nao      { background: rgba(255,23,68,.15); color: var(--red); }
-
-.input-row {
-  display: flex; align-items: center; gap: 8px;
-  margin-bottom: 6px; padding: 6px 8px;
-  background: rgba(255,255,255,.03); border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.05);
-  transition: border-color .2s;
-}
-.input-row:hover { border-color: rgba(255,255,255,.15); }
-.input-row .desc {
-  flex: 1; font-size: .82rem; color: #ccc;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.input-row input {
-  width: 110px; background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.15); border-radius: 6px;
-  color: white; font-size: .88rem; padding: 5px 10px;
-  text-align: right; outline: none;
-  transition: border-color .2s, background .2s;
-  font-family: inherit;
-}
-.input-row input:focus {
-  border-color: var(--blue); background: rgba(0,176,255,.1);
-}
-.input-row input.entrada { color: var(--green); }
-.input-row input.ess     { color: var(--orange); }
-.input-row input.nao     { color: var(--red); }
-
-.total-box {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 10px 12px; border-radius: 8px; margin: 10px 0 4px 0;
-  font-weight: 700; font-size: .9rem;
-}
-.total-ent  { background: rgba(0,200,83,.12);  border: 1px solid rgba(0,200,83,.3);  color: var(--green); }
-.total-ess  { background: rgba(255,109,0,.12); border: 1px solid rgba(255,109,0,.3); color: var(--orange); }
-.total-nao  { background: rgba(255,23,68,.12); border: 1px solid rgba(255,23,68,.3); color: var(--red); }
-.total-geral{ background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.15); color: white; }
-
-.saldo-box {
-  margin-top: 16px; padding: 14px 16px; border-radius: 12px;
-  text-align: center; border-width: 2px; border-style: solid;
-}
-.saldo-box .saldo-titulo { font-size: .75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-.saldo-box .saldo-valor  { font-size: 2rem; font-weight: 700; }
-.saldo-box .saldo-sub    { font-size: .78rem; margin-top: 4px; opacity: .8; }
-
-.reserva-box {
-  margin-top: 10px; padding: 10px 14px; border-radius: 10px;
-  background: rgba(0,176,255,.08); border: 1px solid rgba(0,176,255,.25);
-  display: flex; justify-content: space-between; align-items: center;
-}
-.reserva-box .r-label { font-size: .75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
-.reserva-box .r-val   { font-size: 1rem; font-weight: 700; color: var(--blue); }
-
-/* ── LADO DIREITO — DASHBOARD ── */
-.dash-side {
-  overflow-y: auto;
-  padding: 20px 24px;
-}
-
-/* KPIs */
-.kpi-row {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
-  margin-bottom: 20px;
-}
-.kpi-card {
-  background: rgba(255,255,255,.05); border: 1px solid var(--border);
-  border-radius: 14px; padding: 16px; text-align: center;
-  backdrop-filter: blur(10px); transition: transform .2s;
-}
-.kpi-card:hover { transform: translateY(-3px); }
-.kpi-card .icon  { font-size: 1.6rem; margin-bottom: 6px; }
-.kpi-card .label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-.kpi-card .value { font-size: 1.1rem; font-weight: 700; }
-.c-green  { color: var(--green); }
-.c-red    { color: var(--red); }
-.c-orange { color: var(--orange); }
-.c-blue   { color: var(--blue); }
-
-/* Status banner */
-.status-banner {
-  border-left: 4px solid; border-radius: 10px;
-  padding: 14px 18px; margin-bottom: 20px;
-  display: flex; align-items: center; gap: 12px;
-  background: rgba(0,0,0,.25);
-}
-.status-banner .si { font-size: 1.8rem; }
-.status-banner h3  { font-size: 1.1rem; font-weight: 700; margin-bottom: 2px; }
-.status-banner p   { font-size: .82rem; color: #bbb; }
-
-/* Charts grid */
-.charts-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
-.chart-card {
-  background: rgba(26,26,46,.85); border: 1px solid var(--border);
-  border-radius: 14px; padding: 16px; backdrop-filter: blur(10px);
-}
-.chart-card h4 { text-align: center; font-size: .82rem; color: #bbb; margin-bottom: 12px; font-weight: 600; }
-.chart-full { grid-column: 1 / -1; }
-
-.gauge-wrap { position: relative; }
-.gauge-label {
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -10%); text-align: center; pointer-events: none;
-}
-.gauge-label .pv { font-size: 1.8rem; font-weight: 700; }
-.gauge-label .ps { font-size: .7rem; color: #aaa; }
-
-/* Responsivo */
-@media (max-width: 1100px) {
-  .split { grid-template-columns: 1fr; }
-  .planilha-side { border-right: none; border-bottom: 2px solid var(--border); }
-  .kpi-row { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 600px) {
-  .charts-2 { grid-template-columns: 1fr; }
-  .kpi-row  { grid-template-columns: repeat(2, 1fr); }
-  .split    { grid-template-columns: 1fr; }
-}
-
-/* Scrollbar customizada */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 3px; }
-</style>
 </head>
 <body>
 
 <!-- HEADER -->
-<div class="header">
-  <h1>💼 Planilha + <span>Dashboard</span> Financeiro</h1>
-  <div class="header-right">
-    <div class="badge-date" id="dataAtual">📅 17/03/2026</div>
-    <button class="btn-toggle" onclick="togglePlanilha()">⇄ Ocultar Planilha</button>
-  </div>
-</div>
 
+<div class="header-right">
+  <div class="badge-date" id="dataAtual">📅 17/03/2026</div>
+
+  <button class="btn-toggle" onclick="togglePlanilha()">
+    ⇄ Ocultar Planilha
+  </button>
+
+  <button class="btn-toggle" onclick="clearData()">
+    🗑️ Resetar Dados
+  </button>
+</div>
 <!-- SPLIT LAYOUT -->
 <div class="split" id="splitLayout">
 
@@ -226,41 +37,53 @@ body {
 
     <!-- ENTRADAS -->
     <div class="section-label label-entradas">💰 Entradas</div>
+   <button class="btn-toggle" onclick="addCampo('entrada')">
+  + Nova Entrada
+</button>
+ 
 
     <div class="input-row">
-      <span class="desc">Salário Líquido</span>
+     <span class="desc" contenteditable="true">Salário Líquido</span>
       <input type="number" class="entrada" id="e0" value="2000" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Vale-Alimentação</span>
+      <span class="desc" contenteditable="true">Vale-Alimentação</span>
+     
       <input type="number" class="entrada" id="e1" value="594" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Vale-Refeição (Pessoa 01)</span>
+      <span class="desc" contenteditable="true">Vale-Refeição (Pessoa 01)</span>
+     
       <input type="number" class="entrada" id="e2" value="0" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Salário Líquido (Pessoa 02)</span>
+      <span class="desc" contenteditable="true">Vale-Refeição (Pessoa 02)</span>
+      
       <input type="number" class="entrada" id="e3" value="0" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Vale-Alimentação (Pessoa 02)</span>
+      <span class="desc" contenteditable="true">Vale-Refeição (Pessoa 02)</span>
+     
       <input type="number" class="entrada" id="e4" value="0" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Vale-Refeição (Pessoa 02)</span>
+      <span class="desc" contenteditable="true">Vale-Refeição (Pessoa 01)</span>
+     
       <input type="number" class="entrada" id="e5" value="0" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Outras Entradas 01</span>
+      <span class="desc" contenteditable="true">Outras Entradas 01</span>
+      
       <input type="number" class="entrada" id="e6" value="150" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Salário do mês de Fevereiro</span>
+      <span class="desc" contenteditable="true">Salário do mês de Fevereiro</span>
+      
       <input type="number" class="entrada" id="e7" value="770" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Outras Entradas 03 (Aluguel, Aulas...)</span>
+       <span class="desc" contenteditable="true">Outras Entradas 03 (Aluguel, Aulas...)</span>
+     
       <input type="number" class="entrada" id="e8" value="0" min="0" step="0.01" oninput="recalc()">
     </div>
 
@@ -270,50 +93,65 @@ body {
     </div>
 
     <!-- ESSENCIAIS -->
-    <div class="section-label label-ess">🏠 Despesas Essenciais</div>
+    <div class="section-label label-nao">💳 Despesas Não Essenciais</div>
+    <button class="btn-toggle" onclick="addCampo('nao')">
+  + Nova Dispesa
+</button>
 
     <div class="input-row">
-      <span class="desc">Moradia (Aluguel/Financiamento)</span>
+       <span class="desc" contenteditable="true">Moradia (Aluguel/Financiamento)</span>
+     
       <input type="number" class="ess" id="ess0" value="225" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Condomínio</span>
+       <span class="desc" contenteditable="true">Isis</span>
+       
+      
       <input type="number" class="ess" id="ess1" value="0" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Supermercado</span>
+      <span class="desc" contenteditable="true">Supermercado</span>
+      
       <input type="number" class="ess" id="ess2" value="594" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Água</span>
+      <span class="desc" contenteditable="true">Água</span>
+     
       <input type="number" class="ess" id="ess3" value="20" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Luz</span>
+      <span class="desc" contenteditable="true">luz</span>
+    
       <input type="number" class="ess" id="ess4" value="35" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Gás</span>
+      <span class="desc" contenteditable="true">Gás</span>
+      
       <input type="number" class="ess" id="ess5" value="150" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Plano de Saúde</span>
+      <span class="desc" contenteditable="true">Plano de Saúde</span>
+      
       <input type="number" class="ess" id="ess6" value="0" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Seguro de Vida</span>
+      <span class="desc" contenteditable="true">Seguro de Vida</span>
+      
       <input type="number" class="ess" id="ess7" value="0" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Investimentos</span>
+      <span class="desc" contenteditable="true">Investimentos</span>
+     
       <input type="number" class="ess" id="ess8" value="200" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Corte de Cabelo</span>
+      <span class="desc" contenteditable="true">Corte de Cabelo</span>
+      
       <input type="number" class="ess" id="ess9" value="30" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Higiene Pessoal</span>
+      <span class="desc" contenteditable="true">Higiene Pessoal</span>
+      
       <input type="number" class="ess" id="ess10" value="100" min="0" step="0.01" oninput="recalc()">
     </div>
 
@@ -321,76 +159,95 @@ body {
       <span>TOTAL ESSENCIAIS</span>
       <span id="tot-ess">R$ 0,00</span>
     </div>
+    <div id="campos-dinamicos-nao"></div>
+
 
     <!-- NÃO ESSENCIAIS -->
     <div class="section-label label-nao">💳 Despesas Não Essenciais</div>
 
     <div class="input-row">
-      <span class="desc">Cartão de Crédito</span>
+      <span class="desc" contenteditable="true">Cartão de Crédito</span>
+      
       <input type="number" class="nao" id="nao0" value="700" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Manutenção Odontológica</span>
+      <span class="desc" contenteditable="true">Manutenção Odontológica</span>
+    
       <input type="number" class="nao" id="nao1" value="120" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Farmácia</span>
+      <span class="desc" contenteditable="true">Farmácia</span>
+      
       <input type="number" class="nao" id="nao2" value="50" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Gastos com Animais</span>
+      <span class="desc" contenteditable="true">Gastos com Animais</span>
+     
       <input type="number" class="nao" id="nao3" value="50" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Gastos Imprevistos</span>
+      <span class="desc" contenteditable="true">Gastos Imprevistos</span>
+      
       <input type="number" class="nao" id="nao4" value="80" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Perfume</span>
+      <span class="desc" contenteditable="true">Perfume</span>
+      
       <input type="number" class="nao" id="nao5" value="125" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Gastos c/ Veículo</span>
+      <span class="desc" contenteditable="true">uber</span>
+     
       <input type="number" class="nao" id="nao6" value="0" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Internet Residencial</span>
+      <span class="desc" contenteditable="true">Internet Residencial</span>
+      
       <input type="number" class="nao" id="nao7" value="50" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Claro (Celular)</span>
+      <span class="desc" contenteditable="true">Claro (Celular)</span>
+     
       <input type="number" class="nao" id="nao8" value="69.8" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Padaria / Feira</span>
+      <span class="desc" contenteditable="true">Padaria</span>
+      
       <input type="number" class="nao" id="nao9" value="50" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Saídas / Cinema / Lazer</span>
+      <span class="desc" contenteditable="true">Saídas / Cinema / Lazer</span>
+     
       <input type="number" class="nao" id="nao10" value="100" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Salão / Manicure / Depilação</span>
+      <span class="desc" contenteditable="true">alão / Manicure / Depilação</span>
+      
       <input type="number" class="nao" id="nao11" value="150" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Faculdade</span>
+      <span class="desc" contenteditable="true">Faculdade</span>
+      
       <input type="number" class="nao" id="nao12" value="70" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Bolsa</span>
+      <span class="desc" contenteditable="true">Bolsa</span>
+      
       <input type="number" class="nao" id="nao13" value="100" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Notebook</span>
+      <span class="desc" contenteditable="true">Notebook</span>
+     
       <input type="number" class="nao" id="nao14" value="0" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Outras Despesas 02 (Cursos, Inglês...)</span>
+      <span class="desc" contenteditable="true">pos graduação</span>
+      
       <input type="number" class="nao" id="nao15" value="0" min="0" step="0.01" oninput="recalc()">
     </div>
     <div class="input-row">
-      <span class="desc">Outras Despesas 03 (Itens Diversos)</span>
+      <span class="desc" contenteditable="true">Outras Despesas 03 (Itens Diversos)</span>
+      
       <input type="number" class="nao" id="nao16" value="0" min="0" step="0.01" oninput="recalc()">
     </div>
 
@@ -654,6 +511,7 @@ function togglePlanilha() {
     layout.style.gridTemplateColumns = '1fr';
     btn.textContent = '⇄ Mostrar Planilha';
   }
+  saveData();
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
