@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planilha + Dashboard Financeiro – Mauricio&Maria</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f0c29;
+  --panel: #1a1a2e;
+  --panel2: #16213e;
+  --border: rgba(255,255,255,0.08);
+  --green: #00C853;
+  --orange: #FF6D00;
+  --red: #FF1744;
+  --blue: #00B0FF;
+  --text: #e0e0e0;
+  --muted: #888;
+}
+
+body {
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+.header {
+  background: linear-gradient(90deg, #1a1a2e, #16213e, #0f3460);
+  padding: 18px 28px;
+  border-bottom: 3px solid var(--green);
+  display: flex; justify-content: space-between; align-items: center;
+  position: sticky; top: 0; z-index: 100;
+}
+.header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; }
+.header h1 span { color: var(--green); }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.badge-date { background: rgba(0,200,83,.15); border: 1px solid var(--green); color: var(--green); padding: 6px 14px; border-radius: 20px; font-size: .8rem; }
+.btn-toggle {
+  background: rgba(0,176,255,.15); border: 1px solid var(--blue); color: var(--blue);
+  padding: 6px 14px; border-radius: 20px; font-size: .8rem; cursor: pointer;
+  transition: background .2s;
+}
+.btn-toggle:hover { background: rgba(0,176,255,.3); }
+
+/* ── LAYOUT SPLIT ── */
+.split {
+  display: grid;
+  grid-template-columns: 520px 1fr;
+  gap: 0;
+  min-height: calc(100vh - 62px);
+}
+
+/* ── LADO ESQUERDO — PLANILHA ── */
+.planilha-side {
+  background: rgba(16,14,40,0.97);
+  border-right: 2px solid var(--border);
+  overflow-y: auto;
+  padding: 20px;
+  transition: all .3s;
+}
+
+.planilha-side h2 {
+  font-size: 1rem; color: var(--blue); margin-bottom: 16px;
+  padding-bottom: 8px; border-bottom: 2px solid rgba(0,176,255,.3);
+  text-transform: uppercase; letter-spacing: 1px;
+}
+
+.section-label {
+  font-size: .7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.5px; padding: 6px 10px; border-radius: 6px;
+  margin: 14px 0 8px 0; display: inline-block;
+}
+.label-entradas { background: rgba(0,200,83,.15); color: var(--green); }
+.label-ess      { background: rgba(255,109,0,.15); color: var(--orange); }
+.label-nao      { background: rgba(255,23,68,.15); color: var(--red); }
+
+.input-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 6px; padding: 6px 8px;
+  background: rgba(255,255,255,.03); border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.05);
+  transition: border-color .2s;
+}
+.input-row:hover { border-color: rgba(255,255,255,.15); }
+.input-row .desc {
+  flex: 1; font-size: .82rem; color: #ccc;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.input-row input {
+  width: 110px; background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.15); border-radius: 6px;
+  color: white; font-size: .88rem; padding: 5px 10px;
+  text-align: right; outline: none;
+  transition: border-color .2s, background .2s;
+  font-family: inherit;
+}
+.input-row input:focus {
+  border-color: var(--blue); background: rgba(0,176,255,.1);
+}
+.input-row input.entrada { color: var(--green); }
+.input-row input.ess     { color: var(--orange); }
+.input-row input.nao     { color: var(--red); }
+
+.total-box {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 12px; border-radius: 8px; margin: 10px 0 4px 0;
+  font-weight: 700; font-size: .9rem;
+}
+.total-ent  { background: rgba(0,200,83,.12);  border: 1px solid rgba(0,200,83,.3);  color: var(--green); }
+.total-ess  { background: rgba(255,109,0,.12); border: 1px solid rgba(255,109,0,.3); color: var(--orange); }
+.total-nao  { background: rgba(255,23,68,.12); border: 1px solid rgba(255,23,68,.3); color: var(--red); }
+.total-geral{ background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.15); color: white; }
+
+.saldo-box {
+  margin-top: 16px; padding: 14px 16px; border-radius: 12px;
+  text-align: center; border-width: 2px; border-style: solid;
+}
+.saldo-box .saldo-titulo { font-size: .75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.saldo-box .saldo-valor  { font-size: 2rem; font-weight: 700; }
+.saldo-box .saldo-sub    { font-size: .78rem; margin-top: 4px; opacity: .8; }
+
+.reserva-box {
+  margin-top: 10px; padding: 10px 14px; border-radius: 10px;
+  background: rgba(0,176,255,.08); border: 1px solid rgba(0,176,255,.25);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.reserva-box .r-label { font-size: .75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+.reserva-box .r-val   { font-size: 1rem; font-weight: 700; color: var(--blue); }
+
+/* ── LADO DIREITO — DASHBOARD ── */
+.dash-side {
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+/* KPIs */
+.kpi-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin-bottom: 20px;
+}
+.kpi-card {
+  background: rgba(255,255,255,.05); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px; text-align: center;
+  backdrop-filter: blur(10px); transition: transform .2s;
+}
+.kpi-card:hover { transform: translateY(-3px); }
+.kpi-card .icon  { font-size: 1.6rem; margin-bottom: 6px; }
+.kpi-card .label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.kpi-card .value { font-size: 1.1rem; font-weight: 700; }
+.c-green  { color: var(--green); }
+.c-red    { color: var(--red); }
+.c-orange { color: var(--orange); }
+.c-blue   { color: var(--blue); }
+
+/* Status banner */
+.status-banner {
+  border-left: 4px solid; border-radius: 10px;
+  padding: 14px 18px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(0,0,0,.25);
+}
+.status-banner .si { font-size: 1.8rem; }
+.status-banner h3  { font-size: 1.1rem; font-weight: 700; margin-bottom: 2px; }
+.status-banner p   { font-size: .82rem; color: #bbb; }
+
+/* Charts grid */
+.charts-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.chart-card {
+  background: rgba(26,26,46,.85); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px; backdrop-filter: blur(10px);
+}
+.chart-card h4 { text-align: center; font-size: .82rem; color: #bbb; margin-bottom: 12px; font-weight: 600; }
+.chart-full { grid-column: 1 / -1; }
+
+.gauge-wrap { position: relative; }
+.gauge-label {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -10%); text-align: center; pointer-events: none;
+}
+.gauge-label .pv { font-size: 1.8rem; font-weight: 700; }
+.gauge-label .ps { font-size: .7rem; color: #aaa; }
+
+/* Responsivo */
+@media (max-width: 1100px) {
+  .split { grid-template-columns: 1fr; }
+  .planilha-side { border-right: none; border-bottom: 2px solid var(--border); }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .charts-2 { grid-template-columns: 1fr; }
+  .kpi-row  { grid-template-columns: repeat(2, 1fr); }
+  .split    { grid-template-columns: 1fr; }
+}
+
+/* Scrollbar customizada */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>💼 Planilha + <span>Dashboard</span> Financeiro</h1>
+  <div class="header-right">
+    <div class="badge-date" id="dataAtual">📅 17/03/2026</div>
+    <button class="btn-toggle" onclick="togglePlanilha()">⇄ Ocultar Planilha</button>
+  </div>
+</div>
+
+<!-- SPLIT LAYOUT -->
+<div class="split" id="splitLayout">
+
+  <!-- ══════════════════════════════════
+       ESQUERDA — PLANILHA EDITÁVEL
+  ══════════════════════════════════ -->
+  <div class="planilha-side" id="planilhaSide">
+    <h2>📋 Planilha de Controle</h2>
+
+    <!-- ENTRADAS -->
+    <div class="section-label label-entradas">💰 Entradas</div>
+
+    <div class="input-row">
+      <span class="desc">Salário Líquido</span>
+      <input type="number" class="entrada" id="e0" value="2000" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Vale-Alimentação</span>
+      <input type="number" class="entrada" id="e1" value="594" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Vale-Refeição (Pessoa 01)</span>
+      <input type="number" class="entrada" id="e2" value="0" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Salário Líquido (Pessoa 02)</span>
+      <input type="number" class="entrada" id="e3" value="0" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Vale-Alimentação (Pessoa 02)</span>
+      <input type="number" class="entrada" id="e4" value="0" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Vale-Refeição (Pessoa 02)</span>
+      <input type="number" class="entrada" id="e5" value="0" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Outras Entradas 01</span>
+      <input type="number" class="entrada" id="e6" value="150" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Salário do mês de Fevereiro</span>
+      <input type="number" class="entrada" id="e7" value="770" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Outras Entradas 03 (Aluguel, Aulas...)</span>
+      <input type="number" class="entrada" id="e8" value="0" min="0" step="0.01" oninput="recalc()">
+    </div>
+
+    <div class="total-box total-ent">
+      <span>TOTAL DE ENTRADAS</span>
+      <span id="tot-entradas">R$ 0,00</span>
+    </div>
+
+    <!-- ESSENCIAIS -->
+    <div class="section-label label-ess">🏠 Despesas Essenciais</div>
+
+    <div class="input-row">
+      <span class="desc">Moradia (Aluguel/Financiamento)</span>
+      <input type="number" class="ess" id="ess0" value="225" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Condomínio</span>
+      <input type="number" class="ess" id="ess1" value="0" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Supermercado</span>
+      <input type="number" class="ess" id="ess2" value="594" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Água</span>
+      <input type="number" class="ess" id="ess3" value="20" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Luz</span>
+      <input type="number" class="ess" id="ess4" value="35" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Gás</span>
+      <input type="number" class="ess" id="ess5" value="150" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Plano de Saúde</span>
+      <input type="number" class="ess" id="ess6" value="0" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Seguro de Vida</span>
+      <input type="number" class="ess" id="ess7" value="0" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Investimentos</span>
+      <input type="number" class="ess" id="ess8" value="200" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Corte de Cabelo</span>
+      <input type="number" class="ess" id="ess9" value="30" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Higiene Pessoal</span>
+      <input type="number" class="ess" id="ess10" value="100" min="0" step="0.01" oninput="recalc()">
+    </div>
+
+    <div class="total-box total-ess">
+      <span>TOTAL ESSENCIAIS</span>
+      <span id="tot-ess">R$ 0,00</span>
+    </div>
+
+    <!-- NÃO ESSENCIAIS -->
+    <div class="section-label label-nao">💳 Despesas Não Essenciais</div>
+
+    <div class="input-row">
+      <span class="desc">Cartão de Crédito</span>
+      <input type="number" class="nao" id="nao0" value="700" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Manutenção Odontológica</span>
+      <input type="number" class="nao" id="nao1" value="120" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Farmácia</span>
+      <input type="number" class="nao" id="nao2" value="50" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Gastos com Animais</span>
+      <input type="number" class="nao" id="nao3" value="50" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Gastos Imprevistos</span>
+      <input type="number" class="nao" id="nao4" value="80" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Perfume</span>
+      <input type="number" class="nao" id="nao5" value="125" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Gastos c/ Veículo</span>
+      <input type="number" class="nao" id="nao6" value="0" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Internet Residencial</span>
+      <input type="number" class="nao" id="nao7" value="50" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Claro (Celular)</span>
+      <input type="number" class="nao" id="nao8" value="69.8" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Padaria / Feira</span>
+      <input type="number" class="nao" id="nao9" value="50" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Saídas / Cinema / Lazer</span>
+      <input type="number" class="nao" id="nao10" value="100" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Salão / Manicure / Depilação</span>
+      <input type="number" class="nao" id="nao11" value="150" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Faculdade</span>
+      <input type="number" class="nao" id="nao12" value="70" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Bolsa</span>
+      <input type="number" class="nao" id="nao13" value="100" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Notebook</span>
+      <input type="number" class="nao" id="nao14" value="0" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Outras Despesas 02 (Cursos, Inglês...)</span>
+      <input type="number" class="nao" id="nao15" value="0" min="0" step="0.01" oninput="recalc()">
+    </div>
+    <div class="input-row">
+      <span class="desc">Outras Despesas 03 (Itens Diversos)</span>
+      <input type="number" class="nao" id="nao16" value="0" min="0" step="0.01" oninput="recalc()">
+    </div>
+
+    <div class="total-box total-nao">
+      <span>TOTAL NÃO ESSENCIAIS</span>
+      <span id="tot-nao">R$ 0,00</span>
+    </div>
+
+    <div class="total-box total-geral">
+      <span>TOTAL GERAL DE DESPESAS</span>
+      <span id="tot-geral">R$ 0,00</span>
+    </div>
+
+    <!-- SALDO -->
+    <div class="saldo-box" id="saldoBox">
+      <div class="saldo-titulo">Todo mês vai sobrar</div>
+      <div class="saldo-valor" id="saldoValor">R$ 0,00</div>
+      <div class="saldo-sub" id="saldoSub">—</div>
+    </div>
+
+    <div class="reserva-box">
+      <span class="r-label">🛡️ Reserva de Emergência Ideal (6 meses)</span>
+      <span class="r-val" id="reservaVal">R$ 0,00</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       DIREITA — DASHBOARD AO VIVO
+  ══════════════════════════════════ -->
+  <div class="dash-side">
+
+    <!-- Status Banner -->
+    <div class="status-banner" id="statusBanner" style="border-color: #00C853;">
+      <div class="si" id="statusIcone">✅</div>
+      <div>
+        <h3 id="statusTitulo" style="color:#00C853">STATUS: POSITIVO</h3>
+        <p id="statusDesc">Carregando...</p>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="icon">💰</div><div class="label">Entradas</div><div class="value c-green" id="kpi-ent">—</div></div>
+      <div class="kpi-card"><div class="icon">🏠</div><div class="label">Essenciais</div><div class="value c-orange" id="kpi-ess">—</div></div>
+      <div class="kpi-card"><div class="icon">💳</div><div class="label">Não Essenciais</div><div class="value c-red" id="kpi-nao">—</div></div>
+      <div class="kpi-card"><div class="icon">📊</div><div class="label">Total Despesas</div><div class="value c-red" id="kpi-td">—</div></div>
+      <div class="kpi-card"><div class="icon">💵</div><div class="label">Saldo</div><div class="value" id="kpi-saldo">—</div></div>
+      <div class="kpi-card"><div class="icon">🛡️</div><div class="label">Reserva 6m</div><div class="value c-blue" id="kpi-reserva">—</div></div>
+    </div>
+
+    <!-- GRÁFICOS LINHA 1 -->
+    <div class="charts-2">
+      <div class="chart-card">
+        <h4>💰 Composição das Entradas</h4>
+        <canvas id="cEnt" height="220"></canvas>
+      </div>
+      <div class="chart-card">
+        <h4>📊 Essencial vs Não Essencial</h4>
+        <canvas id="cDesp" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- GRÁFICOS LINHA 2 -->
+    <div class="charts-2">
+      <div class="chart-card">
+        <h4>📈 Fluxo Financeiro</h4>
+        <canvas id="cWater" height="220"></canvas>
+      </div>
+      <div class="chart-card">
+        <h4>🎯 % Renda Comprometida</h4>
+        <div class="gauge-wrap">
+          <canvas id="cGauge" height="220"></canvas>
+          <div class="gauge-label">
+            <div class="pv" id="gaugePct">0%</div>
+            <div class="ps">comprometido</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRÁFICO BARRAS COMPLETO -->
+    <div class="chart-card chart-full">
+      <h4>📋 Ranking de Todas as Despesas</h4>
+      <canvas id="cBarras"></canvas>
+    </div>
+
+  </div><!-- /dash-side -->
+</div><!-- /split -->
+
+<script>
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+const brl = v => 'R$ ' + Math.abs(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+const GRID = 'rgba(255,255,255,0.07)';
+Chart.defaults.color = 'white';
+
+// ─── IDS DOS CAMPOS ───────────────────────────────────────────────────────────
+const ENT_IDS  = ['e0','e1','e2','e3','e4','e5','e6','e7','e8'];
+const ENT_DESC = ['Salário Líquido','Vale-Alimentação','Vale-Refeição P01','Salário P02','Vale-Alim P02','Vale-Ref P02','Outras Entradas 01','Salário Fevereiro','Outras Entradas 03'];
+const ESS_IDS  = ['ess0','ess1','ess2','ess3','ess4','ess5','ess6','ess7','ess8','ess9','ess10'];
+const ESS_DESC = ['Moradia','Condomínio','Supermercado','Água','Luz','Gás','Plano de Saúde','Seguro de Vida','Investimentos','Corte de Cabelo','Higiene Pessoal'];
+const NAO_IDS  = ['nao0','nao1','nao2','nao3','nao4','nao5','nao6','nao7','nao8','nao9','nao10','nao11','nao12','nao13','nao14','nao15','nao16'];
+const NAO_DESC = ['Cartão de Crédito','Odontológico','Farmácia','Animais','Imprevistos','Perfume','Veículo','Internet','Claro','Padaria/Feira','Cinema/Lazer','Salão/Manicure','Faculdade','Bolsa','Notebook','Cursos/Inglês','Itens Diversos'];
+
+const getVal = id => parseFloat(document.getElementById(id).value) || 0;
+
+// ─── INSTÂNCIAS DOS GRÁFICOS ──────────────────────────────────────────────────
+let chartEnt, chartDesp, chartWater, chartGauge, chartBarras;
+
+function initCharts() {
+  chartEnt = new Chart(document.getElementById('cEnt'), {
+    type: 'doughnut',
+    data: { labels: [], datasets: [{ data: [], backgroundColor: ['#00C853','#1DE9B6','#69F0AE','#B9F6CA','#00BFA5','#64DD17','#76FF03','#CCFF90','#AED581'], borderColor:'#1a1a2e', borderWidth:2 }] },
+    options: { responsive:true, cutout:'58%', plugins: { legend:{labels:{color:'white',font:{size:11}}}, tooltip:{callbacks:{label:c=>` ${c.label}: ${brl(c.parsed)}`}} } }
+  });
+
+  chartDesp = new Chart(document.getElementById('cDesp'), {
+    type: 'doughnut',
+    data: { labels:['Essenciais','Não Essenciais'], datasets:[{ data:[0,0], backgroundColor:['#FF6D00','#FF1744'], borderColor:'#1a1a2e', borderWidth:2 }] },
+    options: { responsive:true, cutout:'58%', plugins: { legend:{labels:{color:'white',font:{size:11}}}, tooltip:{callbacks:{label:c=>` ${c.label}: ${brl(c.parsed)}`}} } }
+  });
+
+  chartWater = new Chart(document.getElementById('cWater'), {
+    type: 'bar',
+    data: { labels:['Entradas','Essenciais','Não Ess.','Saldo'], datasets:[
+      { data:[0,0,0,0], backgroundColor:'transparent', borderColor:'transparent', stack:'w' },
+      { data:[0,0,0,0], backgroundColor:['#00C853','#FF6D00','#FF1744','#00C853'], borderRadius:4, borderColor:'#1a1a2e', borderWidth:1, stack:'w', label:'Valor' }
+    ]},
+    options: { responsive:true,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>{ if(c.datasetIndex!==1) return null; const raw=c.chart._rawWF||[]; return raw[c.dataIndex]!==undefined?brl(raw[c.dataIndex]):null; }}} },
+      scales:{ x:{stacked:true,grid:{color:GRID},ticks:{color:'white',font:{size:11}}}, y:{stacked:true,grid:{color:GRID},ticks:{color:'white',callback:v=>'R$'+v.toLocaleString('pt-BR')}} }
+    }
+  });
+
+  chartGauge = new Chart(document.getElementById('cGauge'), {
+    type: 'doughnut',
+    data: { datasets:[{ data:[0,130], backgroundColor:['#00C853','rgba(255,255,255,0.07)'], borderColor:'#1a1a2e', borderWidth:2, circumference:180, rotation:-90 }] },
+    options: { responsive:true, cutout:'72%', plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
+  });
+
+  chartBarras = new Chart(document.getElementById('cBarras'), {
+    type: 'bar',
+    data: { labels:[], datasets:[{ data:[], backgroundColor:[], borderRadius:4, borderColor:'#1a1a2e', borderWidth:1 }] },
+    options: { indexAxis:'y', responsive:true,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>` ${brl(c.parsed.x)}`}} },
+      scales:{ x:{grid:{color:GRID},ticks:{color:'white',callback:v=>'R$'+v.toLocaleString('pt-BR')}}, y:{grid:{color:GRID},ticks:{color:'white',font:{size:11}}} }
+    }
+  });
+}
+
+// ─── RECALCULA TUDO ───────────────────────────────────────────────────────────
+function recalc() {
+  // Totais
+  const entVals  = ENT_IDS.map(id => ({ desc: ENT_DESC[ENT_IDS.indexOf(id)], v: getVal(id) })).filter(x => x.v > 0);
+  const essVals  = ESS_IDS.map(id => ({ desc: ESS_DESC[ESS_IDS.indexOf(id)], v: getVal(id) })).filter(x => x.v > 0);
+  const naoVals  = NAO_IDS.map(id => ({ desc: NAO_DESC[NAO_IDS.indexOf(id)], v: getVal(id) })).filter(x => x.v > 0);
+
+  const te    = entVals.reduce((s,x)=>s+x.v, 0);
+  const tess  = essVals.reduce((s,x)=>s+x.v, 0);
+  const tnao  = naoVals.reduce((s,x)=>s+x.v, 0);
+  const td    = tess + tnao;
+  const saldo = te - td;
+  const reserva = td * 6;
+  const pct   = te > 0 ? Math.round((td/te)*1000)/10 : 0;
+
+  // Planilha — totais
+  document.getElementById('tot-entradas').textContent = brl(te);
+  document.getElementById('tot-ess').textContent      = brl(tess);
+  document.getElementById('tot-nao').textContent      = brl(tnao);
+  document.getElementById('tot-geral').textContent    = brl(td);
+  document.getElementById('reservaVal').textContent   = brl(reserva);
+
+  // Saldo box
+  const sb   = document.getElementById('saldoBox');
+  const sVal = document.getElementById('saldoValor');
+  const sSub = document.getElementById('saldoSub');
+  const cor  = saldo >= 0 ? '#00C853' : '#FF1744';
+  sb.style.borderColor    = cor;
+  sb.style.background     = saldo >= 0 ? 'rgba(0,200,83,.1)' : 'rgba(255,23,68,.1)';
+  sVal.style.color        = cor;
+  sVal.textContent        = brl(saldo) + (saldo < 0 ? ' ⚠️' : '');
+  sSub.textContent        = saldo >= 0
+    ? `${(100 - pct).toFixed(1)}% da renda disponível — ótimo!`
+    : `Déficit de ${Math.abs(100-pct).toFixed(1)}% — revise seus gastos!`;
+
+  // KPIs
+  document.getElementById('kpi-ent').textContent     = brl(te);
+  document.getElementById('kpi-ess').textContent     = brl(tess);
+  document.getElementById('kpi-nao').textContent     = brl(tnao);
+  document.getElementById('kpi-td').textContent      = brl(td);
+  document.getElementById('kpi-reserva').textContent = brl(reserva);
+  const kpiSaldo = document.getElementById('kpi-saldo');
+  kpiSaldo.textContent  = brl(saldo);
+  kpiSaldo.className    = 'value ' + (saldo >= 0 ? 'c-green' : 'c-red');
+
+  // Status banner
+  const banner = document.getElementById('statusBanner');
+  banner.style.borderColor = cor;
+  banner.style.background  = saldo >= 0 ? 'rgba(0,200,83,.07)' : 'rgba(255,23,68,.07)';
+  document.getElementById('statusIcone').textContent         = saldo >= 0 ? '✅' : '❌';
+  document.getElementById('statusTitulo').textContent        = `STATUS: ${saldo >= 0 ? 'POSITIVO' : 'NEGATIVO'}`;
+  document.getElementById('statusTitulo').style.color        = cor;
+  document.getElementById('statusDesc').textContent =
+    `${saldo >= 0 ? 'Sobram' : 'Faltam'} ${brl(Math.abs(saldo))} por mês  |  ${Math.abs(100-pct).toFixed(1)}% da renda ${saldo >= 0 ? 'disponível' : 'no negativo'}`;
+
+  // ── GRÁFICO: Pizza Entradas
+  chartEnt.data.labels   = entVals.map(x=>x.desc);
+  chartEnt.data.datasets[0].data = entVals.map(x=>x.v);
+  chartEnt.update('none');
+
+  // ── GRÁFICO: Pizza Despesas
+  chartDesp.data.datasets[0].data = [tess, tnao];
+  chartDesp.update('none');
+
+  // ── GRÁFICO: Waterfall
+  const raw   = [te, -tess, -tnao, saldo];
+  let run = 0;
+  const bases=[], bars=[], bColors=[];
+  raw.forEach((v,i)=>{
+    if(i===0){ bases.push(0); bars.push(v); bColors.push('#00C853'); run=v; }
+    else if(i===raw.length-1){ bases.push(0); bars.push(run); bColors.push(run>=0?'#00C853':'#FF1744'); }
+    else { const b=Math.min(run,run+v); bases.push(b); bars.push(Math.abs(v)); bColors.push(v<0?'#FF1744':'#FF6D00'); run+=v; }
+  });
+  chartWater._rawWF = raw;
+  chartWater.data.datasets[0].data = bases;
+  chartWater.data.datasets[1].data = bars;
+  chartWater.data.datasets[1].backgroundColor = bColors;
+  chartWater.update('none');
+
+  // ── GRÁFICO: Gauge
+  const corGauge = pct < 70 ? '#00C853' : pct < 90 ? '#FF6D00' : '#FF1744';
+  chartGauge.data.datasets[0].data = [pct, Math.max(0, 130-pct)];
+  chartGauge.data.datasets[0].backgroundColor = [corGauge, 'rgba(255,255,255,0.07)'];
+  chartGauge.update('none');
+  document.getElementById('gaugePct').textContent = pct + '%';
+  document.getElementById('gaugePct').style.color = corGauge;
+
+  // ── GRÁFICO: Barras horizontais (todas as despesas, ordenadas)
+  const todas = [
+    ...essVals.map(x=>({...x, cor:'#FF6D00'})),
+    ...naoVals.map(x=>({...x, cor:'#FF5252'}))
+  ].sort((a,b)=>a.v-b.v);
+  const nDesp = todas.length;
+  document.getElementById('cBarras').style.height = Math.max(300, nDesp*40) + 'px';
+  chartBarras.data.labels = todas.map(x=>x.desc);
+  chartBarras.data.datasets[0].data = todas.map(x=>x.v);
+  chartBarras.data.datasets[0].backgroundColor = todas.map(x=>x.cor);
+  chartBarras.update('none');
+}
+
+// ─── TOGGLE PLANILHA ─────────────────────────────────────────────────────────
+function togglePlanilha() {
+  const side = document.getElementById('planilhaSide');
+  const layout = document.getElementById('splitLayout');
+  const btn = document.querySelector('.btn-toggle');
+  if(side.style.display === 'none') {
+    side.style.display = '';
+    layout.style.gridTemplateColumns = '520px 1fr';
+    btn.textContent = '⇄ Ocultar Planilha';
+  } else {
+    side.style.display = 'none';
+    layout.style.gridTemplateColumns = '1fr';
+    btn.textContent = '⇄ Mostrar Planilha';
+  }
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+// Data atual
+const hoje = new Date();
+document.getElementById('dataAtual').textContent =
+  '📅 ' + hoje.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+
+initCharts();
+recalc();
+</script>
+</body>
+</html>
